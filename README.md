@@ -4,12 +4,13 @@ This project is a programmable protocol emulator designed for the Jane Street pr
 
 ## Setup
 
-The toolchain is provided by Nix and additional tool installations should not be required. This should work on all Linux distros, including WSL, but was only tested on ubuntu 26.04 LTS and Arch using zsh.
+The toolchain is provided by Nix and additional tool installations (except Vivado) should not be required. This should work on all Linux distros, including WSL, but was only tested on ubuntu 26.04 LTS and Arch using zsh.
 
 **Prerequisites:**
 
-- `curl` to bootstrap the Nix installer
-- `direnv` for automatic activation, usually `<pkg-manager> install direnv`
+- **`curl`** to bootstrap the Nix installer
+- **`direnv`** for automatic activation, usually `<pkg-manager> install direnv`
+- **Vivado 2025.2** for use with Xilinx FPGAs (optional)
 
 Clone and run the setup script:
 
