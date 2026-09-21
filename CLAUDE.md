@@ -22,10 +22,11 @@ The shell provides: `bender`, `slang`, `verilator`, `iverilog`, `yosys` (yosysFu
 ## Commands
 
 ```sh
-make lint             # slang + verilator lint; this is the CI gate
+make lint             # slang + verilator lint
 make lint-slang       # slang only
 make lint-verilator   # verilator only
-make regression       # currently an alias for `make lint`
+make regression       # UART verification + lint; this is the CI gate
+make regression-uart  # UART verification only
 
 make -C target/sim core CORE_CPP="cpp/<tb>.cpp"   # build Verilator sim binary
 make -C target/sim clean
@@ -33,7 +34,11 @@ make -C target/sim clean
 make -C target/xilinx/pynq-z2 bitstream           # also: synth, impl, program
 ```
 
-There is no test suite yet — `verif/` is empty and `make regression` only runs lint. When adding tests, wire them into `regression` rather than inventing a parallel entry point.
+UART verification lives in `verif/uart/` and runs through its own `Makefile`.
+It checks independent RX stimulus, TX pin timing, loopback,
+filtering, errors, and reset/disable recovery across five parameter configurations.
+`verif/uart/check_uart_parameters.sh` checks rejection of invalid parameters at elaboration.
+When adding tests, wire them into `regression` rather than inventing a parallel entry point.
 
 ### Known-failing state
 
@@ -51,6 +56,7 @@ Adding an RTL file means editing `Bender.yml` — dropping a `.sv` into `rtl/` d
 | --- | --- | --- | --- |
 | root lint | `sources.f` | `rtl synthesis` | — |
 | Verilator sim | `target/sim/sources_core.f` | `rtl synthesis` | `target/sim/rtl/proto_emu_verilator.sv` |
+| UART verification | `verif/uart/sources.f` | `uart_test` | — |
 | pynq-z2 | `target/xilinx/pynq-z2/sources.f` | `rtl synthesis fpga xilinx` | `src/tc_sram.sv`, `src/fpga_top.sv` |
 
 Flist rules depend on `Bender.yml`/`Bender.lock`, so `make` regenerates them automatically — but a stale flist after a `git pull` is worth deleting if something looks wrong.

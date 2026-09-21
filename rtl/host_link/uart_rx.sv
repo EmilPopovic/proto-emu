@@ -123,7 +123,7 @@ module uart_rx #(
         timer_q <= TimerWidth'(BitCycles - 1);
         data_q  <= '0;
       end else begin
-        case (state_q)
+        unique case (state_q)
           StWaitIdle: begin
             if (!rx_filtered) begin
               timer_q <= TimerWidth'(BitCycles - 1);

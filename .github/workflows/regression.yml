@@ -17,28 +17,31 @@
 #
 # Emil Popovic <mail@emilpopovic.me>
 
-package:
-  name: proto-emu
-  description: "A programmable protocol emulator"
-  authors:
-    - "Emil Popovic <mail@emilpopovic.me>"
-    - "Matej Jurasic <matej.jurasic@cappig.dev>"
+name: regression
 
-sources:
-  - target: not(uart_test)
-    files:
-      # Core modules
-      - rtl/core/proto_emu_pkg.sv
-      - rtl/core/proto_emu.sv
-      # Host link wrapper modules
-      - rtl/host_link/strobe_rx.sv
-      - rtl/host_link/strobe_tx.sv
-  - rtl/host_link/uart_rx.sv
-  - rtl/host_link/uart_tx.sv
-  - target: not(uart_test)
-    files:
-      - rtl/host_link/proto_emu_top.sv
-  - target: uart_test
-    files:
-      - verif/uart/uart_case.sv
-      - verif/uart/uart_tb.sv
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Run verification and lint, reporting failures from both.
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - uses: DeterminateSystems/magic-nix-cache-action@v14
+        with:
+          use-flakehub: false
+          use-gha-cache: true
+
+      - name: Regression
+        run: |
+          nix develop --accept-flake-config --command \
+            make -C . -k regression

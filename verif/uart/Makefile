@@ -17,31 +17,23 @@
 #
 # Emil Popovic <mail@emilpopovic.me>
 
-name: lint
+.DEFAULT_GOAL := regression
+.DELETE_ON_ERROR:
 
-on:
-  push:
-  pull_request:
+FLIST = sources.f
+BUILD_DIR = obj_dir
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+$(FLIST): ../../Bender.yml ../../Bender.lock
+	bender script flist-plus -t uart_test > $@
 
-jobs:
-  # Run `make lint`
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
+.PHONY: regression
+regression: $(FLIST)
+	verilator --binary --timing --no-sched-zero-delay --assert --build -j 2 --Wall \
+		--top-module uart_tb \
+		--timescale 1ns/1ps --Mdir $(BUILD_DIR) -f $(FLIST) -o uart_tb
+	./$(BUILD_DIR)/uart_tb
+	sh check_uart_parameters.sh $(abspath $(FLIST))
 
-      - uses: DeterminateSystems/nix-installer-action@v22
-
-      - uses: DeterminateSystems/magic-nix-cache-action@v14
-        with:
-          use-flakehub: false
-          use-gha-cache: true
-
-      - name: Lint
-        run: |
-          nix develop --accept-flake-config --command \
-            make -C . lint
+.PHONY: clean
+clean:
+	rm -rf $(BUILD_DIR) $(FLIST)

@@ -47,5 +47,8 @@ lint-verilator: sources.f
 	verilator $(VERILATOR_LINT_FLAGS) verilator_lint.vlt -f sources.f
 
 .PHONY: regression
-regression:
-	make lint
+regression: regression-uart lint
+
+.PHONY: regression-uart
+regression-uart:
+	$(MAKE) -C verif/uart regression

@@ -4,3 +4,4 @@
 Bender.local
 sources*.f
 *.log
+obj_dir*/

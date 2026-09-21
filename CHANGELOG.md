@@ -11,7 +11,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Backup UART RX/TX PHYs with configurable clock and baud rate, 8N1 byte
-  streams, and back-to-back transmit frames. RX includes input synchronization,
-  optional glitch filtering (enabled by default), start-bit validation, and framing/overflow
-  error pulses. Packet framing remains the responsibility of the packet layer.
+- Backup UART RX/TX PHYs with configurable clock and baud rate, 8N1 byte streams, and back-to-back transmit frames. RX includes input synchronization, optional glitch filtering (enabled by default), start-bit validation, and framing/overflow error pulses. Packet framing remains the responsibility of the packet layer.
+- Self-checking UART simulation under `verif/uart/` across clock and filter configurations, integrated into `make regression` and CI, with independent TX waveform and RX stimulus checks.
