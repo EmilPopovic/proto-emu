@@ -1,0 +1,10 @@
+package:
+  name: proto-emu
+  description: "A programmable protocol emulator"
+  authors:
+    - "Emil Popovic <mail@emilpopovic.me>"
+    - "Matej Jurasic <matej.jurasic@cappig.dev>"
+
+sources:
+  - rtl/proto_emu_pkg.sv
+  - rtl/proto_emu.sv

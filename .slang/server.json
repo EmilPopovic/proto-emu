@@ -1,0 +1,12 @@
+{
+  "flags": "--top proto_emu --timescale 1ns/1ps -Wno-duplicate-definition -Wno-case-redundant-default --suppress-warnings .bender/... -Weverything",
+  "build": "sources.f",
+  "index": [
+    {
+      "dirs": [
+        "rtl"
+      ],
+      "excludeDirs": ["build", "obj_dir"]
+    }
+  ]
+}

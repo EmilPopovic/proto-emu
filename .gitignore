@@ -1,0 +1,6 @@
+.direnv/
+.slang/local/
+.bender/
+Bender.local
+sources*.f
+*.log
