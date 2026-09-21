@@ -23,19 +23,24 @@ module proto_emu
   // Number of pins usable for protocol emulation
   parameter int unsigned NumPins = 8,
 
-  // Register bus default types, can be overridden by the user
-  parameter type reg_req_t = proto_emu_reg_req_t,
-  parameter type reg_rsp_t = proto_emu_reg_rsp_t
+  // OBI bus default types, can be overridden by the user
+  parameter type obi_req_t = proto_emu_obi_req_t,
+  parameter type obi_rsp_t = proto_emu_obi_rsp_t
 ) (
   input  logic clk_i,
   input  logic rst_ni,
 
   // Subordinate bus interface
-  input  reg_req_t s_reg_req_i,
-  output reg_rsp_t s_reg_rsp_o,
-  // Master bus interface
-  output reg_req_t m_reg_req_o,
-  input  reg_rsp_t m_reg_rsp_i
+  input  obi_req_t s_obi_req_i,
+  output obi_rsp_t s_obi_rsp_o,
+  // Manager bus interface
+  output obi_req_t m_obi_req_o,
+  input  obi_rsp_t m_obi_rsp_i,
+
+  // Protocol emulation pins
+  output logic [NumPins-1:0] proto_o,
+  input  logic [NumPins-1:0] proto_i,
+  output logic [NumPins-1:0] proto_oe_o
 );
 
 endmodule : proto_emu

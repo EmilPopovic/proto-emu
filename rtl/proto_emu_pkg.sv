@@ -21,28 +21,37 @@ package proto_emu_pkg;
 
   localparam int unsigned AddrWidth = 32;
   localparam int unsigned DataWidth = 32;
-  localparam int unsigned StrbWidth = DataWidth / 8;
+  localparam int unsigned BeWidth   = DataWidth / 8;
 
   typedef logic [AddrWidth-1:0] addr_t;
   typedef logic [DataWidth-1:0] data_t;
-  typedef logic [StrbWidth-1:0] strb_t;
+  typedef logic [BeWidth-1:0]   be_t;
 
-  //////////////////////////////
-  // Register bus definitions //
-  //////////////////////////////
+  /////////////////////
+  // OBI definitions //
+  /////////////////////
 
-  typedef struct packed { 
+  typedef struct packed {
     addr_t addr;
-    logic  write;
+    logic  we;
+    be_t   be;
     data_t wdata;
-    strb_t wstrb;
-    logic  valid;
-  } proto_emu_reg_req_t; 
+  } proto_emu_obi_a_chan_t;
 
-  typedef struct packed { 
+  typedef struct packed {
     data_t rdata;
-    logic  error;
-    logic  ready; 
-  } proto_emu_reg_rsp_t;
+    logic  err;
+  } proto_emu_obi_r_chan_t;
+
+  typedef struct packed {
+    proto_emu_obi_a_chan_t a;
+    logic                  req;
+  } proto_emu_obi_req_t;
+
+  typedef struct packed {
+    proto_emu_obi_r_chan_t r;
+    logic                  gnt;
+    logic                  rvalid;
+  } proto_emu_obi_rsp_t;
 
 endpackage : proto_emu_pkg
