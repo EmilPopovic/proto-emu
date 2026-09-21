@@ -27,9 +27,9 @@ package proto_emu_pkg;
   typedef logic [DataWidth-1:0] data_t;
   typedef logic [StrbWidth-1:0] strb_t;
 
-//////////////////////////////
-// Register bus definitions //
-//////////////////////////////
+  //////////////////////////////
+  // Register bus definitions //
+  //////////////////////////////
 
   typedef struct packed { 
     addr_t addr;

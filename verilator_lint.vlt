@@ -19,5 +19,6 @@
 
 `verilator_config
 
+// Only lint project files, not imported vendor IP
 lint_off -file "*/.bender/git/checkouts/*"
 lint_off -file "*/rtl/vendored/*"
