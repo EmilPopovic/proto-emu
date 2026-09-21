@@ -25,8 +25,9 @@ The shell provides: `bender`, `slang`, `verilator`, `iverilog`, `yosys` (yosysFu
 make lint             # slang + verilator lint
 make lint-slang       # slang only
 make lint-verilator   # verilator only
-make regression       # UART verification + lint; this is the CI gate
+make regression       # UART + strobe verification + lint; this is the CI gate
 make regression-uart  # UART verification only
+make regression-strobe # Strobe verification only
 
 make -C target/sim core CORE_CPP="cpp/<tb>.cpp"   # build Verilator sim binary
 make -C target/sim clean
@@ -38,6 +39,10 @@ UART verification lives in `verif/uart/` and runs through its own `Makefile`.
 It checks independent RX stimulus, TX pin timing, loopback,
 filtering, errors, and reset/disable recovery across five parameter configurations.
 `verif/uart/check_uart_parameters.sh` checks rejection of invalid parameters at elaboration.
+Strobe verification lives in `verif/strobe/`, with independent RX stimulus, TX pin
+timing and throughput checks, loopback, packet-boundary holds, error recovery, and
+synthesis checks that outgoing pads connect directly to flops. See its README for
+the bundled-data timing contract and supported parameter combinations.
 When adding tests, wire them into `regression` rather than inventing a parallel entry point.
 
 ### Known-failing state
@@ -57,6 +62,8 @@ Adding an RTL file means editing `Bender.yml` — dropping a `.sv` into `rtl/` d
 | root lint | `sources.f` | `rtl synthesis` | — |
 | Verilator sim | `target/sim/sources_core.f` | `rtl synthesis` | `target/sim/rtl/proto_emu_verilator.sv` |
 | UART verification | `verif/uart/sources.f` | `uart_test` | — |
+| Strobe verification | `verif/strobe/sources.f` | `strobe_test` | — |
+| Strobe pad synthesis check | `verif/strobe/sources_rtl.f` | `strobe_test synthesis` | — |
 | pynq-z2 | `target/xilinx/pynq-z2/sources.f` | `rtl synthesis fpga xilinx` | `src/tc_sram.sv`, `src/fpga_top.sv` |
 
 Flist rules depend on `Bender.yml`/`Bender.lock`, so `make` regenerates them automatically — but a stale flist after a `git pull` is worth deleting if something looks wrong.

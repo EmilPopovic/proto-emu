@@ -21,19 +21,24 @@
 .DELETE_ON_ERROR:
 
 FLIST = sources.f
+RTL_FLIST = sources_rtl.f
 BUILD_DIR = obj_dir
 
 $(FLIST): ../../Bender.yml ../../Bender.lock
-	bender script flist-plus -t uart_test > $@
+	bender script flist-plus -t strobe_test > $@
+
+$(RTL_FLIST): ../../Bender.yml ../../Bender.lock
+	bender script flist -t strobe_test -t synthesis > $@
 
 .PHONY: regression
-regression: $(FLIST)
+regression: $(FLIST) $(RTL_FLIST)
 	verilator --binary --timing --no-sched-zero-delay --assert --build -j 0 --Wall \
-		--top-module uart_tb \
-		--timescale 1ns/1ps --Mdir $(BUILD_DIR) -f $(FLIST) -o uart_tb
-	./$(BUILD_DIR)/uart_tb
-	sh check_uart_parameters.sh $(abspath $(FLIST))
+		--top-module strobe_tb \
+		--timescale 1ns/1ps --Mdir $(BUILD_DIR) -f $(FLIST) -o strobe_tb
+	./$(BUILD_DIR)/strobe_tb
+	sh check_strobe_parameters.sh $(abspath $(FLIST))
+	sh check_pad_flops.sh $(abspath $(RTL_FLIST))
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR) $(FLIST)
+	rm -rf $(BUILD_DIR) $(FLIST) $(RTL_FLIST)

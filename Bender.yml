@@ -25,20 +25,28 @@ package:
     - "Matej Jurasic <matej.jurasic@cappig.dev>"
 
 sources:
-  - target: not(uart_test)
+  - target: not(any(uart_test, strobe_test))
     files:
       # Core modules
       - rtl/core/proto_emu_pkg.sv
       - rtl/core/proto_emu.sv
-      # Host link wrapper modules
+  - target: not(uart_test)
+    files:
+      # High-speed host link PHYs
       - rtl/host_link/strobe_rx.sv
       - rtl/host_link/strobe_tx.sv
-  - rtl/host_link/uart_rx.sv
-  - rtl/host_link/uart_tx.sv
-  - target: not(uart_test)
+  - target: not(strobe_test)
+    files:
+      - rtl/host_link/uart_rx.sv
+      - rtl/host_link/uart_tx.sv
+  - target: not(any(uart_test, strobe_test))
     files:
       - rtl/host_link/proto_emu_top.sv
   - target: uart_test
     files:
       - verif/uart/uart_case.sv
       - verif/uart/uart_tb.sv
+  - target: all(strobe_test, not(synthesis))
+    files:
+      - verif/strobe/strobe_case.sv
+      - verif/strobe/strobe_tb.sv
