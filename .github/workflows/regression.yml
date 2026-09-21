@@ -45,3 +45,13 @@ jobs:
         run: |
           nix develop --accept-flake-config --command \
             make -C . -k regression
+
+      # regression builds the file as part of regression-tinytapeout. Upload it
+      # even when an earlier target failed, since lint is currently expected to.
+      - name: Upload Tiny Tapeout Verilog
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: tt_um_proto_emu-${{ github.sha }}
+          path: target/tinytapeout/build/tt_um_proto_emu.v
+          if-no-files-found: error

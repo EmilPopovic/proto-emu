@@ -27,7 +27,7 @@ sources.f: Bender.yml Bender.lock
 
 SLANG_SUPPRESS := .bender/...
 
-SLANG_LINT_FLAGS := --top proto_emu --timescale 1ns/1ps \
+SLANG_LINT_FLAGS := --top proto_emu_top --timescale 1ns/1ps \
                     -Wno-duplicate-definition \
                     -Wno-case-redundant-default \
                     --suppress-warnings $(SLANG_SUPPRESS) \
@@ -47,7 +47,7 @@ lint-verilator: sources.f
 	verilator $(VERILATOR_LINT_FLAGS) verilator_lint.vlt -f sources.f
 
 .PHONY: regression
-regression: regression-uart regression-strobe lint
+regression: regression-uart regression-strobe regression-tinytapeout lint
 
 .PHONY: regression-uart
 regression-uart:
@@ -56,3 +56,7 @@ regression-uart:
 .PHONY: regression-strobe
 regression-strobe:
 	$(MAKE) -C verif/strobe regression
+
+.PHONY: regression-tinytapeout
+regression-tinytapeout:
+	$(MAKE) -C target/tinytapeout check

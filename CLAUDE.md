@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A programmable protocol emulator ASIC ("tiny CPU for bit-banging"), written in SystemVerilog, for the Jane Street protocol emulator ASIC competition (`docs/TASK.md`). The repository is currently a **skeleton**: build/lint/CI infrastructure and the three flow targets exist, but `rtl/proto_emu.sv`, the Verilator wrapper, and the FPGA top are empty module shells.
+A programmable protocol emulator ASIC ("tiny CPU for bit-banging"), written in SystemVerilog, for the Jane Street protocol emulator ASIC competition (`docs/TASK.md`). The repository is currently a **skeleton**: build/lint/CI infrastructure and the four flow targets exist, the host link PHYs are written and verified, but `rtl/core/proto_emu.sv`, the Verilator wrapper, and the FPGA top are empty module shells and there is no packet layer yet.
 
 Hard constraints from the competition task that shape every architectural decision:
 
@@ -25,14 +25,18 @@ The shell provides: `bender`, `slang`, `verilator`, `iverilog`, `yosys` (yosysFu
 make lint             # slang + verilator lint
 make lint-slang       # slang only
 make lint-verilator   # verilator only
-make regression       # UART + strobe verification + lint; this is the CI gate
+make regression       # UART + strobe verification + Tiny Tapeout check + lint; the CI gate
 make regression-uart  # UART verification only
 make regression-strobe # Strobe verification only
+make regression-tinytapeout # Tiny Tapeout flatten + synthesis check only
 
 make -C target/sim core CORE_CPP="cpp/<tb>.cpp"   # build Verilator sim binary
 make -C target/sim clean
 
 make -C target/xilinx/pynq-z2 bitstream           # also: synth, impl, program
+
+make -C target/tinytapeout verilog                # build/tt_um_proto_emu.v
+make -C target/tinytapeout check                  # elaborate + synthesize it
 ```
 
 UART verification lives in `verif/uart/` and runs through its own `Makefile`.
@@ -47,13 +51,13 @@ When adding tests, wire them into `regression` rather than inventing a parallel 
 
 ### Known-failing state
 
-- `make lint` currently **fails** (7 slang errors). `proto_emu` is an empty module and slang runs `-Weverything -Werror`, so every unconnected port trips `-Wunused-port` / `-Wundriven-port`. These errors disappear once the module has a body; they are not a lint-config problem.
+- `make lint` currently **fails** (10 slang errors). `proto_emu` is an empty module and slang runs `-Weverything -Werror`, so every unconnected port trips `-Wunused-port` / `-Wundriven-port`; the tenth is `-Wunused-def` on `proto_emu_top`, which nothing instantiates under the `proto_emu` lint top. These errors disappear once the core has a body; they are not a lint-config problem. `make lint-verilator` passes.
 - `make -C target/sim core` currently fails at link with `undefined reference to 'main'` — `target/sim/cpp/` holds only a `.gitkeep`, and `CORE_CPP` is unset by default, so `verilator --exe` has no testbench to compile.
 - `target/xilinx/pynq-z2/vivado/build.tcl` is a license header with no body, and the Makefile's flist rule appends `src/tc_sram.sv`, which does not exist. The FPGA flow will not run until both are filled in.
 
 ## Source lists: Bender is the source of truth
 
-`Bender.yml` lists the RTL files; the `.f` file lists consumed by slang, Verilator, and Vivado are **generated** from it via `bender script flist-plus` and are gitignored (they contain absolute paths, so they are per-machine and must never be committed).
+`Bender.yml` lists the RTL files; the `.f` file lists consumed by slang, Verilator, and Vivado are **generated** from it via `bender script flist-plus` (or plain `bender script flist` where the consumer takes bare paths rather than `-f` syntax, as `sv2v` does) and are gitignored (they contain absolute paths, so they are per-machine and must never be committed).
 
 Adding an RTL file means editing `Bender.yml` — dropping a `.sv` into `rtl/` does nothing on its own. Each flow regenerates its own flist with a different target set:
 
@@ -65,6 +69,7 @@ Adding an RTL file means editing `Bender.yml` — dropping a `.sv` into `rtl/` d
 | Strobe verification | `verif/strobe/sources.f` | `strobe_test` | — |
 | Strobe pad synthesis check | `verif/strobe/sources_rtl.f` | `strobe_test synthesis` | — |
 | pynq-z2 | `target/xilinx/pynq-z2/sources.f` | `rtl synthesis fpga xilinx` | `src/tc_sram.sv`, `src/fpga_top.sv` |
+| Tiny Tapeout | `target/tinytapeout/sources.f` | `rtl synthesis tinytapeout` | `src/tt_um_proto_emu.sv` |
 
 Flist rules depend on `Bender.yml`/`Bender.lock`, so `make` regenerates them automatically — but a stale flist after a `git pull` is worth deleting if something looks wrong.
 
@@ -74,6 +79,7 @@ Flist rules depend on `Bender.yml`/`Bender.lock`, so `make` regenerates them aut
 
 - `target/sim/rtl/proto_emu_verilator.sv` — Verilator top (`proto_emu_verilator`), paired with a C++ testbench in `target/sim/cpp/`.
 - `target/xilinx/pynq-z2/src/` — `fpga_top.sv` plus `fpga_top_wrap.v`, a plain-Verilog wrapper for Vivado IP integration. Pin constraints in `constraints/fpga_top.xdc`.
+- `target/tinytapeout/src/tt_um_proto_emu.sv` — Tiny Tapeout top, flattened by `sv2v` into one Verilog-2005 file for the separate Tiny Tapeout project repository. See `target/tinytapeout/README.md` for the pinout and why the wrapper lives here rather than there.
 
 `proto_emu` (`rtl/proto_emu.sv`) is parameterized by `NumPins` and by the bus struct types. It exposes both a **subordinate** port (`s_obi_req_i`/`s_obi_rsp_o`, host programs the emulator) and a **manager** port (`m_obi_req_o`/`m_obi_rsp_i`, emulator drives other peripherals). The bus is OBI, defined in `proto_emu_pkg` as packed structs in the PULP layout (`proto_emu_obi_req_t` = `{a: {addr, we, be, wdata}, req}`, `proto_emu_obi_rsp_t` = `{r: {rdata, err}, gnt, rvalid}`), 32-bit address and data. The profile is deliberately minimal — one outstanding transaction, no `rready`, no transaction IDs, none of the optional A/R channel signals — because every optional signal costs tiles. Field names and order follow pulp-platform/obi so the types can be overridden with `OBI_TYPEDEF_ALL` output; parameterizing them (rather than hardcoding) is what lets the module be dropped into a larger SoC with a different OBI configuration — keep that indirection.
 
