@@ -12,3 +12,6 @@ sources:
   # Host link wrapper modules
   - rtl/host_link/strobe_rx.sv
   - rtl/host_link/strobe_tx.sv
+  - rtl/host_link/uart_rx.sv
+  - rtl/host_link/uart_tx.sv
+  - rtl/host_link/proto_emu_top.sv
