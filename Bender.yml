@@ -7,8 +7,8 @@ package:
 
 sources:
   # Core modules
-  - rtl/proto_emu_pkg.sv
-  - rtl/proto_emu.sv
-  # TT wrapper modules
-  - rtl/strobe_rx.sv
-  - rtl/strobe_tx.sv
+  - rtl/core/proto_emu_pkg.sv
+  - rtl/core/proto_emu.sv
+  # Host link wrapper modules
+  - rtl/host_link/strobe_rx.sv
+  - rtl/host_link/strobe_tx.sv
