@@ -6,5 +6,9 @@ package:
     - "Matej Jurasic <matej.jurasic@cappig.dev>"
 
 sources:
+  # Core modules
   - rtl/proto_emu_pkg.sv
   - rtl/proto_emu.sv
+  # TT wrapper modules
+  - rtl/strobe_rx.sv
+  - rtl/strobe_tx.sv
